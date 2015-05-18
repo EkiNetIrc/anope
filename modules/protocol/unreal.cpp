@@ -755,6 +755,9 @@ struct IRCDMessageCapab : Message::Capab
 						case 'G':
 							ModeManager::AddChannelMode(new ChannelMode("CENSOR", 'G'));
 							continue;
+						case 'P':
+							ModeManager::AddChannelMode(new ChannelMode("PERM", 'P'));
+							continue;
 						case 'Z':
 							ModeManager::AddChannelMode(new ChannelModeUnrealSSL("", 'Z'));
 							continue;
