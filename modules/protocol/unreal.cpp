@@ -368,7 +368,9 @@ class UnrealIRCdProto : public IRCDProto
 		else if (c->FindUser(bi) == NULL)
 		{
 			bi->Join(c);
-			bi->Part(c);
+
+			if (!c->ci->bi)
+				bi->Part(c);
 		}
 		else
 		{
