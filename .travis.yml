@@ -13,4 +13,4 @@ script:
 
 notifications:
   irc:
-    - "irc.anope.org#anope-devel"
+    - "irc.ekinetirc.fr.nf#EkiNetIrc"
