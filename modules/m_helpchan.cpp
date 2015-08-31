@@ -16,11 +16,11 @@ class HelpChannel : public Module
 
 	EventReturn OnChannelModeSet(Channel *c, MessageSource &, ChannelMode *mode, const Anope::string &param) anope_override
 	{
-		if (mode->name == "OP" && c && c->ci && c->name.equals_ci(Config->GetModule(this)->Get<const Anope::string>("helpchannel")))
+		if (mode->name == "VOICE" && c && c->ci && c->name.equals_ci(Config->GetModule(this)->Get<const Anope::string>("helpchannel")))
 		{
 			User *u = User::Find(param);
 
-			if (u && c->ci->AccessFor(u).HasPriv("OPME"))
+			if (u && c->ci->AccessFor(u).HasPriv("VOICEME"))
 				u->SetMode(Config->GetClient("OperServ"), "HELPOP");
 		}
 
