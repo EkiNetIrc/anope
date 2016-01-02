@@ -34,7 +34,7 @@ class ModuleOsTsctl : public Module
  public:
 	ModuleOsTsctl (const Anope::string &modname, const Anope::string &creator) : Module(modname, creator, THIRD), commandostsctl(this)
 	{
-		if (!ModuleManager::FindModule("unreal")) 
+		if (IRCD->GetProtocolName().find_ci("unreal") == Anope::string::npos) 
 		{ 
 			Log() << "ERROR: You are not running UnrealIRCd, this module only works on UnrealIRCd.";
 			return;
