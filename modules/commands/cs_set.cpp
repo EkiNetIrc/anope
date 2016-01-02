@@ -616,7 +616,7 @@ class CommandCSSetPersist : public Command
 				" \n"
 				"If your IRCd has a permanent (persistent) channel mode\n"
 				"and it is set or unset (for any reason, including MODE LOCK),\n"
-				"persist is automatically set and unset for the channel aswell.\n"
+				"persist is automatically set and unset for the channel as well.\n"
 				"Additionally, services will set or unset this mode when you\n"
 				"set persist on or off."), BotServ ? BotServ->nick.c_str() : "BotServ",
 				ChanServ ? ChanServ->nick.c_str() : "ChanServ");
@@ -870,8 +870,8 @@ class CommandCSSetSecureOps : public Command
 		this->SendSyntax(source);
 		source.Reply(" ");
 		source.Reply(_("Enables or disables the \002secure ops\002 option for a channel.\n"
-				"When \002secure ops\002 is set, users who are not on the userlist\n"
-				"will not be allowed chanop status."));
+				"When \002secure ops\002 is set, users who are not on the access list\n"
+				"will not be allowed channel operator status."));
 		return true;
 	}
 };
@@ -1170,7 +1170,8 @@ class CSSet : public Module
 			{
 				c->SetMode(NULL, cm);
 			}
-			else
+			/* on startup we might not know mode availibity here */
+			else if (Me && Me->IsSynced())
 			{
 				if (!ci->bi)
 				{
@@ -1207,6 +1208,8 @@ class CSSet : public Module
 	CommandCSSetSuccessor commandcssetsuccessor;
 	CommandCSSetNoexpire commandcssetnoexpire;
 
+	ExtensibleRef<bool> inhabit;
+
 	bool persist_lower_ts;
 
  public:
@@ -1221,7 +1224,9 @@ class CSSet : public Module
 		commandcssetdescription(this), commandcssetfounder(this), commandcssetkeepmodes(this),
 		commandcssetpeace(this), commandcssetpersist(this), commandcssetrestricted(this),
 		commandcssetsecure(this), commandcssetsecurefounder(this), commandcssetsecureops(this), commandcssetsignkick(this),
-		commandcssetsuccessor(this), commandcssetnoexpire(this)
+		commandcssetsuccessor(this), commandcssetnoexpire(this),
+
+		inhabit("inhabit")
 	{
 	}
 
@@ -1271,7 +1276,7 @@ class CSSet : public Module
 			if (mode->name == "PERM")
 				persist.Set(c->ci, true);
 
-			if (mode->type != MODE_STATUS && !c->syncing && Me->IsSynced())
+			if (mode->type != MODE_STATUS && !c->syncing && Me->IsSynced() && (!inhabit || !inhabit->HasExt(c)))
 				c->ci->last_modes = c->GetModes();
 		}
 
@@ -1286,16 +1291,9 @@ class CSSet : public Module
 				persist.Unset(c->ci);
 		}
 
-		if (c->ci && mode->type != MODE_STATUS && !c->syncing && Me->IsSynced())
+		if (c->ci && mode->type != MODE_STATUS && !c->syncing && Me->IsSynced() && (!inhabit || !inhabit->HasExt(c)))
 			c->ci->last_modes = c->GetModes();
 
-		return EVENT_CONTINUE;
-	}
-
-	EventReturn OnCheckDelete(Channel *c) anope_override
-	{
-		if (c->ci && persist.HasExt(c->ci))
-			return EVENT_STOP;
 		return EVENT_CONTINUE;
 	}
 

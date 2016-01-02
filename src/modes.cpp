@@ -290,7 +290,7 @@ void StackerInfo::AddMode(Mode *mode, bool set, const Anope::string &param)
 			break;
 		}
 	}
-	/* If the mode is on the other list, remove it from there (eg, we dont want +o-o Adam Adam) */
+	/* If the mode is on the other list, remove it from there (eg, we don't want +o-o Adam Adam) */
 	for (it = otherlist->begin(), it_end = otherlist->end(); it != it_end; ++it)
 	{
 		/* The param must match too (can have multiple status or list modes), but
@@ -320,7 +320,7 @@ static class ModePipe : public Pipe
 	}
 } *modePipe;
 
-/** Get the stacker info for an item, if one doesnt exist it is created
+/** Get the stacker info for an item, if one doesn't exist it is created
  * @param Item The user/channel etc
  * @return The stacker info
  */
@@ -830,8 +830,9 @@ const Anope::string Entry::GetNUHMask() const
 {
 	Anope::string n = nick.empty() ? "*" : nick,
 			u = user.empty() ? "*" : user,
-			h = host.empty() ? "*" : host;
-	return n + "!" + u + "@" + h;
+			h = host.empty() ? "*" : host,
+			r = real.empty() ? "" : "#" + real;
+	return n + "!" + u + "@" + h + r;
 }
 
 bool Entry::Matches(User *u, bool full) const

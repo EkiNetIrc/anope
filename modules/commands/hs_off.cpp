@@ -23,13 +23,18 @@ class CommandHSOff : public Command
 	void Execute(CommandSource &source, const std::vector<Anope::string> &params) anope_override
 	{
 		User *u = source.GetUser();
+
 		const NickAlias *na = NickAlias::Find(u->nick);
+		if (!na || na->nc != u->Account() || !na->HasVhost())
+			na = NickAlias::Find(u->Account()->display);
 
 		if (!na || !na->HasVhost())
 			source.Reply(HOST_NOT_ASSIGNED);
 		else
 		{
+			u->vhost.clear();
 			IRCD->SendVhostDel(u);
+			u->UpdateHost();
 			Log(LOG_COMMAND, source, this) << "to disable their vhost";
 			source.Reply(_("Your vhost was removed and the normal cloaking restored."));
 		}
@@ -56,7 +61,8 @@ class HSOff : public Module
 	HSOff(const Anope::string &modname, const Anope::string &creator) : Module(modname, creator, VENDOR),
 		commandhsoff(this)
 	{
-
+		if (!IRCD || !IRCD->CanSetVHost)
+			throw ModuleException("Your IRCd does not support vhosts");
 	}
 };
 

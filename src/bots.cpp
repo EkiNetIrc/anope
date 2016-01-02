@@ -49,6 +49,8 @@ BotInfo::BotInfo(const Anope::string &nnick, const Anope::string &nuser, const A
 
 BotInfo::~BotInfo()
 {
+	UnsetExtensibles();
+
 	FOREACH_MOD(OnDelBot, (this));
 
 	// If we're synchronised with the uplink already, send the bot.
@@ -217,12 +219,9 @@ void BotInfo::Part(Channel *c, const Anope::string &reason)
 
 	IRCD->SendPart(this, c, "%s", !reason.empty() ? reason.c_str() : "");
 
-	Anope::string cname = c->name;
-	Reference<Channel> cref = c;
-
 	c->DeleteUser(this);
 
-	FOREACH_MOD(OnPartChannel, (this, cref, cname, reason));
+	FOREACH_MOD(OnPartChannel, (this, c, c->name, reason));
 }
 
 void BotInfo::OnMessage(User *u, const Anope::string &message)

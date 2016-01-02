@@ -816,7 +816,10 @@ class CommandNSSetLanguage : public Command
 		Log(nc == source.GetAccount() ? LOG_COMMAND : LOG_ADMIN, source, this) << "to change the language of " << nc->display << " to " << param;
 
 		nc->language = param;
-		source.Reply(_("Language changed to \002English\002."));
+		if (source.GetAccount() == nc)
+			source.Reply(_("Language changed to \002English\002."));
+		else
+			source.Reply(_("Language for \002%s\002 changed to \002%s\002."), nc->display.c_str(), Language::Translate(param.c_str(), _("English")));
 	}
 
 	void Execute(CommandSource &source, const std::vector<Anope::string> &param) anope_override
@@ -1107,13 +1110,13 @@ class CommandNSSASetNoexpire : public Command
 
 		if (param.equals_ci("ON"))
 		{
-			Log(LOG_ADMIN, source, this) << "to enable noexpire for " << na->nc->display;
+			Log(LOG_ADMIN, source, this) << "to enable noexpire for " << na->nick << " (" << na->nc->display << ")";
 			na->Extend<bool>("NS_NO_EXPIRE");
 			source.Reply(_("Nick %s \002will not\002 expire."), na->nick.c_str());
 		}
 		else if (param.equals_ci("OFF"))
 		{
-			Log(LOG_ADMIN, source, this) << "to disable noexpire for " << na->nc->display;
+			Log(LOG_ADMIN, source, this) << "to disable noexpire for " << na->nick << " (" << na->nc->display << ")";
 			na->Shrink<bool>("NS_NO_EXPIRE");
 			source.Reply(_("Nick %s \002will\002 expire."), na->nick.c_str());
 		}

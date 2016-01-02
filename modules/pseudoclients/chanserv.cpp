@@ -12,6 +12,13 @@
 #include "module.h"
 #include "modules/cs_mode.h"
 
+inline static Anope::string BotModes()
+{
+	return Config->GetModule("botserv")->Get<Anope::string>("botmodes",
+		Config->GetModule("chanserv")->Get<Anope::string>("botmodes", "o")
+	);
+}
+
 class ChanServCore : public Module, public ChanServService
 {
 	Reference<BotInfo> ChanServ;
@@ -66,11 +73,11 @@ class ChanServCore : public Module, public ChanServService
 				if (!c)
 					return;
 
-				inhabit.Unset(c);
-
 				/* In the event we don't part */
 				c->RemoveMode(NULL, "SECRET");
 				c->RemoveMode(NULL, "INVITE");
+
+				inhabit.Unset(c); /* now we're done changing modes, unset inhabit */
 
 				if (!c->ci || !c->ci->bi)
 				{
@@ -395,7 +402,7 @@ class ChanServCore : public Module, public ChanServService
 						ci->WhoSends()->Assign(NULL, ci);
 					if (ci->c->FindUser(ci->bi) == NULL)
 					{
-						ChannelStatus status(Config->GetModule("botserv")->Get<const Anope::string>("botmodes"));
+						ChannelStatus status(BotModes());
 						ci->bi->Join(ci->c, &status);
 					}
 				}

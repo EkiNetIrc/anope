@@ -137,10 +137,8 @@ class LDAPModify : public LDAPRequest
 class LDAPService : public LDAPProvider, public Thread, public Condition
 {
 	Anope::string server;
-	int port;
 	Anope::string admin_binddn;
 	Anope::string admin_pass;
-	time_t timeout;
 
 	LDAP *con;
 
@@ -187,6 +185,23 @@ class LDAPService : public LDAPProvider, public Thread, public Condition
 	}
 
  private:
+	void Connect()
+	{
+		int i = ldap_initialize(&this->con, this->server.c_str());
+		if (i != LDAP_SUCCESS)
+			throw LDAPException("Unable to connect to LDAP service " + this->name + ": " + ldap_err2string(i));
+
+		const int version = LDAP_VERSION3;
+		i = ldap_set_option(this->con, LDAP_OPT_PROTOCOL_VERSION, &version);
+		if (i != LDAP_OPT_SUCCESS)
+			throw LDAPException("Unable to set protocol version for " + this->name + ": " + ldap_err2string(i));
+
+		const struct timeval tv = { 0, 0 };
+		i = ldap_set_option(this->con, LDAP_OPT_NETWORK_TIMEOUT, &tv);
+		if (i != LDAP_OPT_SUCCESS)
+			throw LDAPException("Unable to set timeout for " + this->name + ": " + ldap_err2string(i));
+	}
+
 	void Reconnect()
 	{
 		/* Only try one connect a minute. It is an expensive blocking operation */
@@ -195,9 +210,8 @@ class LDAPService : public LDAPProvider, public Thread, public Condition
 		last_connect = Anope::CurTime;
 
 		ldap_unbind_ext(this->con, NULL, NULL);
-		int i = ldap_initialize(&this->con, this->server.c_str());
-		if (i != LDAP_SUCCESS)
-			throw LDAPException("Unable to connect to LDAP service " + this->name + ": " + ldap_err2string(i));
+
+		Connect();
 	}
 
 	void QueueRequest(LDAPRequest *r)
@@ -213,21 +227,9 @@ class LDAPService : public LDAPProvider, public Thread, public Condition
 	query_queue queries, results;
 	Mutex process_mutex; /* held when processing requests not in either queue */
 
-	LDAPService(Module *o, const Anope::string &n, const Anope::string &s, int po, const Anope::string &b, const Anope::string &p, time_t t) : LDAPProvider(o, n), server(s), port(po), admin_binddn(b), admin_pass(p), timeout(t), last_connect(0)
+	LDAPService(Module *o, const Anope::string &n, const Anope::string &s, const Anope::string &b, const Anope::string &p) : LDAPProvider(o, n), server(s), admin_binddn(b), admin_pass(p), last_connect(0)
 	{
-		int i = ldap_initialize(&this->con, this->server.c_str());
-		if (i != LDAP_SUCCESS)
-			throw LDAPException("Unable to connect to LDAP service " + this->name + ": " + ldap_err2string(i));
-
-		const int version = LDAP_VERSION3;
-		i = ldap_set_option(this->con, LDAP_OPT_PROTOCOL_VERSION, &version);
-		if (i != LDAP_OPT_SUCCESS)
-			throw LDAPException("Unable to set protocol version for " + this->name + ": " + ldap_err2string(i));
-
-		const struct timeval tv = { 0, 0 };
-		i = ldap_set_option(this->con, LDAP_OPT_NETWORK_TIMEOUT, &tv);
-		if (i != LDAP_OPT_SUCCESS)
-			throw LDAPException("Unable to set timeout for " + this->name + ": " + ldap_err2string(i));
+		Connect();
 	}
 
 	~LDAPService()
@@ -487,14 +489,12 @@ class ModuleLDAP : public Module, public Pipe
 			if (this->LDAPServices.find(connname) == this->LDAPServices.end())
 			{
 				const Anope::string &server = ldap->Get<const Anope::string>("server", "127.0.0.1");
-				int port = ldap->Get<int>("port", "389");
 				const Anope::string &admin_binddn = ldap->Get<const Anope::string>("admin_binddn");
 				const Anope::string &admin_password = ldap->Get<const Anope::string>("admin_password");
-				time_t timeout = ldap->Get<time_t>("timeout", "5");
 
 				try
 				{
-					LDAPService *ss = new LDAPService(this, connname, server, port, admin_binddn, admin_password, timeout);
+					LDAPService *ss = new LDAPService(this, connname, server, admin_binddn, admin_password);
 					ss->Start();
 					this->LDAPServices.insert(std::make_pair(connname, ss));
 

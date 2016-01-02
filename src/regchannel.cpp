@@ -142,6 +142,8 @@ ChannelInfo::ChannelInfo(const ChannelInfo &ci) : Serializable("ChannelInfo"),
 
 ChannelInfo::~ChannelInfo()
 {
+	UnsetExtensibles();
+
 	FOREACH_MOD(OnDelChan, (this));
 
 	Log(LOG_DEBUG) << "Deleting channel " << this->name;
@@ -383,7 +385,7 @@ ChanAccess *ChannelInfo::GetAccess(unsigned index) const
 	return acc;
 }
 
-AccessGroup ChannelInfo::AccessFor(const User *u)
+AccessGroup ChannelInfo::AccessFor(const User *u, bool updateLastUsed)
 {
 	AccessGroup group;
 
@@ -412,7 +414,8 @@ AccessGroup ChannelInfo::AccessFor(const User *u)
 
 	if (group.founder || !group.empty())
 	{
-		this->last_used = Anope::CurTime;
+		if (updateLastUsed)
+			this->last_used = Anope::CurTime;
 
 		for (unsigned i = 0; i < group.size(); ++i)
 			group[i]->last_seen = Anope::CurTime;
@@ -421,7 +424,7 @@ AccessGroup ChannelInfo::AccessFor(const User *u)
 	return group;
 }
 
-AccessGroup ChannelInfo::AccessFor(const NickCore *nc)
+AccessGroup ChannelInfo::AccessFor(const NickCore *nc, bool updateLastUsed)
 {
 	AccessGroup group;
 
@@ -437,9 +440,10 @@ AccessGroup ChannelInfo::AccessFor(const NickCore *nc)
 	}
 
 	if (group.founder || !group.empty())
-		this->last_used = Anope::CurTime;
+		if (updateLastUsed)
+			this->last_used = Anope::CurTime;
 
-		/* don't update access last seen here, this isn't the user requesting access */
+	/* don't update access last seen here, this isn't the user requesting access */
 
 	return group;
 }
@@ -572,6 +576,12 @@ int16_t ChannelInfo::GetLevel(const Anope::string &priv) const
 
 void ChannelInfo::SetLevel(const Anope::string &priv, int16_t level)
 {
+	if (PrivilegeManager::FindPrivilege(priv) == NULL)
+	{
+		Log(LOG_DEBUG) << "Unknown privilege " + priv;
+		return;
+	}
+
 	this->levels[priv] = level;
 }
 

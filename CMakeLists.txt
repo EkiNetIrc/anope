@@ -10,11 +10,6 @@ if(COMMAND cmake_policy)
   endif(POLICY CMP0007)
 endif(COMMAND cmake_policy)
 
-# If the Source dir and the Binary dir are the same, we are building in-source, which we will disallow due to Autotools being there (but only on non-Windows)
-if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR} AND NOT WIN32)
-  message(FATAL_ERROR "You can not use CMake to build Anope from the root of it's source tree! Remove the CMakeCache.txt file from this directory, then create a separate directory (either below this directory or elsewhere), and then re-run CMake from there.")
-endif(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR} AND NOT WIN32)
-
 # Set the project as C++ primarily, but have C enabled for the checks required later
 project(Anope CXX)
 enable_language(C)
@@ -50,20 +45,20 @@ if(MINOR_VERSION GREATER 5)
   set(CMAKE242_OR_BETTER TRUE)
 else(MINOR_VERSION GREATER 5)
   set(CMAKE26_OR_BETTER FALSE)
-  # Also detect if we are using CMake 2.4.8 or better, the FIND sub-command of list() is non-existant in earlier versions
+  # Also detect if we are using CMake 2.4.8 or better, the FIND sub-command of list() is non-existent in earlier versions
   if(PATCH_VERSION GREATER 7)
     set(CMAKE248_OR_BETTER TRUE)
     set(CMAKE244_OR_BETTER TRUE)
     set(CMAKE242_OR_BETTER TRUE)
   else(PATCH_VERSION GREATER 7)
     set(CMAKE248_OR_BETTER FALSE)
-    # Also detect if we are using CMake 2.4.4 or better, the CheckCXXCompilerFlag module and SORT sub-command of list() are non-existant in earlier versions
+    # Also detect if we are using CMake 2.4.4 or better, the CheckCXXCompilerFlag module and SORT sub-command of list() are non-existent in earlier versions
     if(PATCH_VERSION GREATER 3)
       set(CMAKE244_OR_BETTER TRUE)
       set(CMAKE242_OR_BETTER TRUE)
     else(PATCH_VERSION GREATER 3)
       set(CMAKE244_OR_BETTER FALSE)
-      # ALSO detect if we are using CMake 2.4.2 or better, the APPEND sub-command of list() is non-existant in earlier versions
+      # ALSO detect if we are using CMake 2.4.2 or better, the APPEND sub-command of list() is non-existent in earlier versions
       if(PATCH_VERSION GREATER 1)
         set(CMAKE242_OR_BETTER TRUE)
       else(PATCH_VERSION GREATER 1)
@@ -85,8 +80,17 @@ set(ENV{LC_ALL} C)
 set(DEFAULT_LIBRARY_DIRS)
 set(DEFAULT_INCLUDE_DIRS)
 
+# Check that we aren't running on an ancient broken GCC
+if(CMAKE_COMPILER_IS_GNUCXX)
+  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_FULL_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REGEX REPLACE "^(\\d+\\.\\d+)" "\\1" GCC_VERSION ${GCC_FULL_VERSION})
+  if(GCC_VERSION LESS 4.2)
+    message(FATAL_ERROR "Your compiler is too old to build Anope. Upgrade to GCC 4.2 or newer!")
+  endif(GCC_VERSION LESS 4.2)
+endif(CMAKE_COMPILER_IS_GNUCXX)
+
 # If we are using a GNU compiler (have to use CXX because it seems to fail on C), we will be able to determine it's default paths for libraries and includes
-if(CMAKE_COMPILER_IS_GNUCXX OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang$")
   # First look for the compiler's default library directories
   execute_process(COMMAND ${CMAKE_C_COMPILER} -print-search-dirs OUTPUT_VARIABLE LINES OUTPUT_STRIP_TRAILING_WHITESPACE)
   # Find only the part after "libraries: "
@@ -152,7 +156,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
   if(DEFAULT_INCLUDE_DIRS)
     remove_list_duplicates(DEFAULT_INCLUDE_DIRS)
   endif(DEFAULT_INCLUDE_DIRS)
-endif(CMAKE_COMPILER_IS_GNUCXX OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+endif(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang$")
 
 # If we are using Visual Studio, locate the path of the Windows Server 2008 SDK or Windows Server 2003 Platform SDK, depending on which is installed
 if(MSVC)
@@ -228,8 +232,6 @@ endif(EXTRA_LIBS)
 # Find gettext
 find_package(Gettext)
 
-# Add an optional variable for using run-cc.pl for building, Perl will be checked later regardless of this setting
-option(USE_RUN_CC_PL "Use run-cc.pl for building" OFF)
 option(USE_PCH "Use precompiled headers" OFF)
 
 # Use the following directories as includes
@@ -282,13 +284,15 @@ if(MINGW)
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
 endif(MINGW)
 
-# Under Windows, we set the executable name for Anope to be anope
-if(WIN32)
-  set(PROGRAM_NAME anope)
-# Under *nix, we set the executable name for Anope to be services
-else(WIN32)
-  set(PROGRAM_NAME services)
-endif(WIN32)
+if(NOT PROGRAM_NAME)
+  # Under Windows, we set the executable name for Anope to be anope
+  if(WIN32)
+    set(PROGRAM_NAME anope)
+  # Under *nix, we set the executable name for Anope to be services
+  else(WIN32)
+    set(PROGRAM_NAME services)
+  endif(WIN32)
+endif(NOT PROGRAM_NAME)
 
 # If we are not using Visual Studio, we'll run the following checks
 if(NOT MSVC)
@@ -343,12 +347,12 @@ if(CMAKE_BUILD_TYPE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE STREQUAL "RELWITHDEBINF
   set(DEBUG_BUILD TRUE)
 endif(CMAKE_BUILD_TYPE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE STREQUAL "RELWITHDEBINFO")
 
-# Check for the existance of the following include files
+# Check for the existence of the following include files
 check_include_file(cstdint HAVE_CSTDINT)
 check_include_file(stdint.h HAVE_STDINT_H)
 check_include_file(strings.h HAVE_STRINGS_H)
 
-# Check for the existance of the following functions
+# Check for the existence of the following functions
 check_function_exists(strcasecmp HAVE_STRCASECMP)
 check_function_exists(stricmp HAVE_STRICMP)
 check_function_exists(umask HAVE_UMASK)
@@ -370,19 +374,11 @@ find_program(GREP grep)
 find_program(SH sh)
 find_program(CHGRP chgrp)
 find_program(CHMOD chmod)
-find_program(PERL perl)
-
-# If perl is included on the system and the user wants to use run-cc.pl, change the commands for compiling and linking
-if(PERL AND USE_RUN_CC_PL)
-  set(CMAKE_CXX_COMPILE_OBJECT "${PERL} ${Anope_SOURCE_DIR}/run-cc.pl -q ${CMAKE_CXX_COMPILE_OBJECT}")
-  set(CMAKE_CXX_LINK_EXECUTABLE "${PERL} ${Anope_SOURCE_DIR}/run-cc.pl -q ${CMAKE_CXX_LINK_EXECUTABLE}")
-  set(CMAKE_CXX_CREATE_SHARED_MODULE "${PERL} ${Anope_SOURCE_DIR}/run-cc.pl -q ${CMAKE_CXX_CREATE_SHARED_MODULE}")
-endif(PERL AND USE_RUN_CC_PL)
 
 # If a INSTDIR was passed in to CMake, use it as the install prefix, otherwise set the default install prefix to the services directory under the user's home directory
 if(INSTDIR)
   set(CMAKE_INSTALL_PREFIX "${INSTDIR}")
-else(INSTDIR)
+elseif(NOT CMAKE_INSTALL_PREFIX)
   set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/services")
 endif(INSTDIR)
 
@@ -485,16 +481,16 @@ get_target_property(SERVICES_BINARY ${PROGRAM_NAME} LOCATION)
 get_filename_component(SERVICES_BINARY ${SERVICES_BINARY} NAME)
 
 # At install time, create the following additional directories
-install(CODE "file(MAKE_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/${DB_DIR}/backups\")")
-install(CODE "file(MAKE_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/${LOGS_DIR}\")")
+install(CODE "file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${DB_DIR}/backups\")")
+install(CODE "file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${LOGS_DIR}\")")
 if(WIN32)
   install(CODE "file(MAKE_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}/${DB_DIR}/runtime\")")
 endif(WIN32)
 # On non-Windows platforms, if RUNGROUP is set, change the permissions of the below directories, as well as the group of the data directory
 if(NOT WIN32 AND RUNGROUP)
-  install(CODE "execute_process(COMMAND ${CHMOD} 2775 \"\${CMAKE_INSTALL_PREFIX}/\${DB_DIR}/backups\")")
-  install(CODE "execute_process(COMMAND ${CHMOD} 2775 \"\${CMAKE_INSTALL_PREFIX}/\${LOGS_DIR}\")")
-  install(CODE "execute_process(COMMAND ${CHGRP} -R ${RUNGROUP} \"\${CMAKE_INSTALL_PREFIX}\")")
+  install(CODE "execute_process(COMMAND ${CHMOD} 2775 \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/\${DB_DIR}/backups\")")
+  install(CODE "execute_process(COMMAND ${CHMOD} 2775 \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/\${LOGS_DIR}\")")
+  install(CODE "execute_process(COMMAND ${CHGRP} -R ${RUNGROUP} \"\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}\")")
 endif(NOT WIN32 AND RUNGROUP)
 # On Windows platforms, install extra files
 if(WIN32)
@@ -507,7 +503,7 @@ if(WIN32)
   install(FILES ${EXTRA_DLLS} DESTINATION ${BIN_DIR})
 endif(WIN32)
 
-install(CODE "file(REMOVE_RECURSE \"${CMAKE_INSTALL_PREFIX}/${LIB_DIR}/modules\")")
+install(CODE "file(REMOVE_RECURSE \"$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${LIB_DIR}/modules\")")
 
 # Only process the CPack section if we have CPack
 if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")

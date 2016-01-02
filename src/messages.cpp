@@ -82,12 +82,12 @@ void Join::Run(MessageSource &source, const std::vector<Anope::string> &params)
 			for (User::ChanUserList::iterator it = user->chans.begin(), it_end = user->chans.end(); it != it_end; )
 			{
 				ChanUserContainer *cc = it->second;
+				Channel *c = cc->chan;
 				++it;
 
-				Anope::string channame = cc->chan->name;
-				FOREACH_MOD(OnPrePartChannel, (user, cc->chan));
+				FOREACH_MOD(OnPrePartChannel, (user, c));
 				cc->chan->DeleteUser(user);
-				FOREACH_MOD(OnPartChannel, (user, Channel::Find(channame), channame, ""));
+				FOREACH_MOD(OnPartChannel, (user, c, c->name, ""));
 			}
 			continue;
 		}
@@ -284,16 +284,15 @@ void Part::Run(MessageSource &source, const std::vector<Anope::string> &params)
 
 	while (sep.GetToken(channel))
 	{
-		Reference<Channel> c = Channel::Find(channel);
+		Channel *c = Channel::Find(channel);
 
 		if (!c || !u->FindChannel(c))
 			continue;
 
 		Log(u, c, "part") << "Reason: " << (!reason.empty() ? reason : "No reason");
 		FOREACH_MOD(OnPrePartChannel, (u, c));
-		Anope::string ChannelName = c->name;
 		c->DeleteUser(u);
-		FOREACH_MOD(OnPartChannel, (u, c, ChannelName, !reason.empty() ? reason : ""));
+		FOREACH_MOD(OnPartChannel, (u, c, c->name, !reason.empty() ? reason : ""));
 	}
 }
 

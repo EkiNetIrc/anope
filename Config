@@ -62,12 +62,6 @@ Run_Build_System () {
 		BUILD_TYPE="-DCMAKE_BUILD_TYPE:STRING=RELEASE"
 	fi
 
-	if [ "$USE_RUN_CC_PL" = "yes" ] ; then
-		RUN_CC_PL="-DUSE_RUN_CC_PL:BOOLEAN=ON"
-	else
-		RUN_CC_PL="-DUSE_RUN_CC_PL:BOOLEAN=OFF"
-	fi
-
 	if [ "$USE_PCH" = "yes" ] ; then
 		PCH="-DUSE_PCH:BOOLEAN=ON"
 	else
@@ -97,9 +91,9 @@ Run_Build_System () {
 		REAL_SOURCE_DIR="$SOURCE_DIR"
 	fi
 
-	echo "cmake $GEN_TYPE $WITH_INST $WITH_RUN $WITH_PERM $BUILD_TYPE $RUN_CC_PL $PCH $EXTRA_INCLUDE $EXTRA_LIBS $EXTRA_CONFIG_ARGS $REAL_SOURCE_DIR"
+	echo "cmake $GEN_TYPE $WITH_INST $WITH_RUN $WITH_PERM $BUILD_TYPE $PCH $EXTRA_INCLUDE $EXTRA_LIBS $EXTRA_CONFIG_ARGS $REAL_SOURCE_DIR"
 
-	cmake $GEN_TYPE $WITH_INST $WITH_RUN $WITH_PERM $BUILD_TYPE $RUN_CC_PL $PCH $EXTRA_INCLUDE $EXTRA_LIBS $EXTRA_CONFIG_ARGS $REAL_SOURCE_DIR
+	cmake $GEN_TYPE $WITH_INST $WITH_RUN $WITH_PERM $BUILD_TYPE $PCH $EXTRA_INCLUDE $EXTRA_LIBS $EXTRA_CONFIG_ARGS $REAL_SOURCE_DIR
 
 	echo ""
 	if [ "$SOURCE_DIR" = "." ] ; then
@@ -131,7 +125,6 @@ INSTDIR=$HOME/services
 RUNGROUP=
 UMASK=
 DEBUG="no"
-USE_RUN_CC_PL="no"
 USE_PCH="no"
 EXTRA_INCLUDE_DIRS=
 EXTRA_LIB_DIRS=
@@ -322,30 +315,6 @@ echo ""
 ####
 
 TEMP_YN="n"
-if [ "$USE_RUN_CC_PL" = "yes" ] ; then
-	TEMP_YN="y"
-fi
-echo "You can optionally have the build run through run-cc.pl, which will"
-echo "cause warnings and errors (if any) to be colored yellow and red,"
-echo "respectively. This relies on Perl being installed, so if you say yes"
-echo "to this without Perl, the option will be ignored."
-echo "NOTE: If you are using MinGW, it is NOT recommended to say yes to"
-echo "this, it may fail."
-echo "Would you like to utilize run-cc.pl?"
-echo2 "[$TEMP_YN] "
-read YN
-if [ "$YN" ] ; then
-	if [ "$YN" = "y" ] ; then
-		USE_RUN_CC_PL="yes"
-	else
-		USE_RUN_CC_PL="no"
-	fi
-fi
-echo ""
-
-####
-
-TEMP_YN="n"
 if [ "$USE_PCH" = "yes" ] ; then
 	TEMP_YN="y"
 fi
@@ -401,7 +370,7 @@ echo ""
 ####
 
 echo "Are there any extra arguments you wish to pass to CMake?"
-echo "If you need no extra arugments to CMake, enter NONE in all caps."
+echo "If you need no extra arguments to CMake, enter NONE in all caps."
 echo2 "[$EXTRA_CONFIG_ARGS] "
 if read INPUT ; then : ; else echo "" ; exit 1 ; fi
 if [ "$INPUT" ] ; then
@@ -426,7 +395,6 @@ INSTDIR="$INSTDIR"
 RUNGROUP="$RUNGROUP"
 UMASK=$UMASK
 DEBUG="$DEBUG"
-USE_RUN_CC_PL="$USE_RUN_CC_PL"
 USE_PCH="$USE_PCH"
 EXTRA_INCLUDE_DIRS="$EXTRA_INCLUDE_DIRS"
 EXTRA_LIB_DIRS="$EXTRA_LIB_DIRS"

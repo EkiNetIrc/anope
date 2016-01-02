@@ -216,7 +216,8 @@ class InspIRCd12Proto : public IRCDProto
 
 	void SendNumericInternal(int numeric, const Anope::string &dest, const Anope::string &buf) anope_override
 	{
-		UplinkSocket::Message() << "PUSH " << dest << " ::" << Me->GetName() << " " << numeric << " " << dest << " " << buf;
+		User *u = User::Find(dest);
+		UplinkSocket::Message() << "PUSH " << dest << " ::" << Me->GetName() << " " << numeric << " " << (u ? u->nick : dest) << " " << buf;
 	}
 
 	void SendModeInternal(const MessageSource &source, const Channel *dest, const Anope::string &buf) anope_override
@@ -228,6 +229,8 @@ class InspIRCd12Proto : public IRCDProto
 	{
 		Anope::string modes = "+" + u->GetModes();
 		UplinkSocket::Message(Me) << "UID " << u->GetUID() << " " << u->timestamp << " " << u->nick << " " << u->host << " " << u->host << " " << u->GetIdent() << " 0.0.0.0 " << u->timestamp << " " << modes << " :" << u->realname;
+		if (modes.find('o') != Anope::string::npos)
+			UplinkSocket::Message(u) << "OPERTYPE :services";
 	}
 
 	/* SERVER services-dev.chatspike.net password 0 :Description here */
@@ -947,7 +950,7 @@ struct IRCDMessageFJoin : IRCDMessage
 			sju.second = User::Find(buf);
 			if (!sju.second)
 			{
-				Log(LOG_DEBUG) << "FJOIN for nonexistant user " << buf << " on " << params[0];
+				Log(LOG_DEBUG) << "FJOIN for non-existent user " << buf << " on " << params[0];
 				continue;
 			}
 
@@ -1173,7 +1176,7 @@ struct IRCDMessageOperType : IRCDMessage
 	void Run(MessageSource &source, const std::vector<Anope::string> &params) anope_override
 	{
 		/* opertype is equivalent to mode +o because servers
-		   dont do this directly */
+		   don't do this directly */
 		User *u = source.GetUser();
 		if (!u->HasMode("OPER"))
 			u->SetModesInternal(source, "+o");
@@ -1369,7 +1372,7 @@ class ProtoInspIRCd12 : public Module
 		/* InspIRCd 1.2 doesn't set -r on nick change, remove -r here. Note that if we have to set +r later
 		 * this will cancel out this -r, resulting in no mode changes.
 		 *
-		 * Do not set -r if we dont have a NickServ loaded - DP
+		 * Do not set -r if we don't have a NickServ loaded - DP
 		 */
 		BotInfo *NickServ = Config->GetClient("NickServ");
 		if (NickServ)

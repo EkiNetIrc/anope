@@ -27,6 +27,8 @@ class CommandHSOn : public Command
 
 		User *u = source.GetUser();
 		const NickAlias *na = NickAlias::Find(u->nick);
+		if (!na || na->nc != u->Account() || !na->HasVhost())
+			na = NickAlias::Find(u->Account()->display);
 		if (na && u->Account() == na->nc && na->HasVhost())
 		{
 			if (!na->GetVhostIdent().empty())
@@ -65,7 +67,8 @@ class HSOn : public Module
 	HSOn(const Anope::string &modname, const Anope::string &creator) : Module(modname, creator, VENDOR),
 		commandhson(this)
 	{
-
+		if (!IRCD || !IRCD->CanSetVHost)
+			throw ModuleException("Your IRCd does not support vhosts");
 	}
 };
 

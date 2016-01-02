@@ -666,7 +666,7 @@ class CommandCSLevels : public Command
 	{
 		const Anope::string &what = params[2];
 
-		/* Don't allow disabling of the founder level. It would be hard to change it back if you dont have access to use this command */
+		/* Don't allow disabling of the founder level. It would be hard to change it back if you don't have access to use this command */
 		if (what.equals_ci("FOUNDER"))
 		{
 			source.Reply(_("You can not disable the founder privilege because it would be impossible to reenable it at a later time."));
@@ -758,12 +758,20 @@ class CommandCSLevels : public Command
 			return;
 		}
 
+		bool has_access = false;
+		if (source.HasPriv("chanserv/access/modify"))
+			has_access = true;
+		else if (cmd.equals_ci("LIST") && source.HasPriv("chanserv/access/list"))
+			has_access = true;
+		else if (source.AccessFor(ci).HasPriv("FOUNDER"))
+			has_access = true;
+
 		/* If SET, we want two extra parameters; if DIS[ABLE] or FOUNDER, we want only
 		 * one; else, we want none.
 		 */
 		if (cmd.equals_ci("SET") ? s.empty() : (cmd.substr(0, 3).equals_ci("DIS") ? (what.empty() || !s.empty()) : !what.empty()))
 			this->OnSyntaxError(source, cmd);
-		else if (!source.AccessFor(ci).HasPriv("FOUNDER") && !source.HasPriv("chanserv/access/modify"))
+		else if (!has_access)
 			source.Reply(ACCESS_DENIED);
 		else if (Anope::ReadOnly && !cmd.equals_ci("LIST"))
 			source.Reply(READ_ONLY_MODE);
@@ -883,9 +891,9 @@ class CSAccess : public Module
 	{
 		if (group->ci == NULL)
 			return EVENT_CONTINUE;
-		/* Special case. Allows a level of < 0 to match anyone, and a level of 0 to match anyone identified. */
+		/* Special case. Allows a level of -1 to match anyone, and a level of 0 to match anyone identified. */
 		int16_t level = group->ci->GetLevel(priv);
-		if (level < 0)
+		if (level == -1)
 			return EVENT_ALLOW;
 		else if (level == 0 && group->nc)
 			return EVENT_ALLOW;

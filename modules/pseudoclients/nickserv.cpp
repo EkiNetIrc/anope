@@ -39,6 +39,11 @@ class NickServCollide : public Timer
 		return u;
 	}
 
+	NickAlias *GetNick()
+	{
+		return na;
+	}
+
 	void Tick(time_t t) anope_override
 	{
 		if (!u || !na)
@@ -361,7 +366,7 @@ class NickServCore : public Module, public NickServService
 		for (std::set<NickServCollide *>::iterator it = collides.begin(); it != collides.end(); ++it)
 		{
 			NickServCollide *c = *it;
-			if (c->GetUser() == u)
+			if (c->GetUser() == u && c->GetNick() && c->GetNick()->nc == u->Account())
 			{
 				delete c;
 				break;
@@ -395,7 +400,7 @@ class NickServCore : public Module, public NickServService
 
 		const Anope::string &unregistered_notice = Config->GetModule(this)->Get<const Anope::string>("unregistered_notice");
 		if (!Config->GetModule("nickserv")->Get<bool>("nonicknameownership") && !unregistered_notice.empty() && !na && !u->Account())
-			u->SendMessage(NickServ, unregistered_notice);
+			u->SendMessage(NickServ, unregistered_notice.replace_all_cs("%n", u->nick));
 		else if (na && !u->IsIdentified(true))
 			this->Validate(u);
 	}

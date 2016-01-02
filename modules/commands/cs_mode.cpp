@@ -44,10 +44,11 @@ struct ModeLocksImpl : ModeLocks
 
 	~ModeLocksImpl()
 	{
-		for (ModeList::iterator it = this->mlocks->begin(); it != this->mlocks->end();)
+		ModeList modelist;
+		mlocks->swap(modelist);
+		for (ModeList::iterator it = modelist.begin(); it != modelist.end(); ++it)
 		{
 			ModeLock *ml = *it;
-			++it;
 			delete ml;
 		}
 	}
@@ -921,7 +922,7 @@ class CSMode : public Module
 				}
 				else if (cm->type == MODE_PARAM)
 				{
-					/* If the channel doesnt have the mode, or it does and it isn't set correctly */
+					/* If the channel doesn't have the mode, or it does and it isn't set correctly */
 					if (ml->set)
 					{
 						Anope::string param;
