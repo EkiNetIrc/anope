@@ -1,3 +1,11 @@
+/*
+ *
+ * (C) 2012-2016 Anope Team
+ * Contact us at team@anope.org
+ *
+ * Please read COPYING and README for further details.
+ */
+
 #include "module.h"
 #include "modules/sql.h"
 
@@ -17,6 +25,20 @@ class SQLOperResult : public SQL::Interface
 		~SQLOperResultDeleter() { delete res; }
 	};
 
+	void Deoper()
+	{
+		if (user->Account() && user->Account()->o && dynamic_cast<SQLOper *>(user->Account()->o))
+		{
+			delete user->Account()->o;
+			user->Account()->o = NULL;
+
+			Log(this->owner) << "m_sql_oper: Removed services operator from " << user->nick << " (" << user->Account()->display << ")";
+
+			BotInfo *OperServ = Config->GetClient("OperServ");
+			user->RemoveMode(OperServ, "OPER"); // Probably not set, just incase
+		}
+	}
+
  public:
 	SQLOperResult(Module *m, User *u) : SQL::Interface(m), user(u) { }
 
@@ -24,8 +46,15 @@ class SQLOperResult : public SQL::Interface
 	{
 		SQLOperResultDeleter d(this);
 
-		if (!user || !user->Account() || r.Rows() == 0)
+		if (!user || !user->Account())
 			return;
+
+		if (r.Rows() == 0)
+		{
+			Log(LOG_DEBUG) << "m_sql_oper: Got 0 rows for " << user->nick;
+			Deoper();
+			return;
+		}
 
 		Anope::string opertype;
 		try
@@ -34,6 +63,7 @@ class SQLOperResult : public SQL::Interface
 		}
 		catch (const SQL::Exception &)
 		{
+			Log(this->owner) << "Expected column named \"opertype\" but one was not found";
 			return;
 		}
 
@@ -44,19 +74,15 @@ class SQLOperResult : public SQL::Interface
 		{
 			modes = r.Get(0, "modes");
 		}
-		catch (const SQL::Exception &) { }
+		catch (const SQL::Exception &)
+		{
+			// Common case here is an exception, but this probably doesn't get this far often
+		}
 
 		BotInfo *OperServ = Config->GetClient("OperServ");
 		if (opertype.empty())
 		{
-			if (user->Account() && user->Account()->o && dynamic_cast<SQLOper *>(user->Account()->o))
-			{
-				delete user->Account()->o;
-				user->Account()->o = NULL;
-
-				Log(this->owner) << "m_sql_oper: Removed services operator from " << user->nick << " (" << user->Account()->display << ")";
-				user->RemoveMode(OperServ, "OPER"); // Probably not set, just incase
-			}
+			Deoper();
 			return;
 		}
 
@@ -67,9 +93,17 @@ class SQLOperResult : public SQL::Interface
 			return;
 		}
 
+		if (user->Account()->o && !dynamic_cast<SQLOper *>(user->Account()->o))
+		{
+			Log(this->owner) << "Oper " << user->Account()->display << " has type " << opertype << ", but is already configured as an oper of type " << user->Account()->o->ot->GetName();
+			return;
+		}
+
 		if (!user->Account()->o || user->Account()->o->ot != ot)
 		{
 			Log(this->owner) << "m_sql_oper: Tieing oper " << user->nick << " to type " << opertype;
+
+			delete user->Account()->o;
 			user->Account()->o = new SQLOper(user->Account()->display, ot);
 		}
 

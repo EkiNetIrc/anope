@@ -1,13 +1,12 @@
 /* Configuration file handling.
  *
- * (C) 2003-2014 Anope Team
+ * (C) 2003-2016 Anope Team
  * Contact us at team@anope.org
  *
  * Please read COPYING and README for further details.
  *
  * Based on the original code of Epona by Lara.
  * Based on the original code of Services by Andy Church.
- *
  */
 
 #include "services.h"
@@ -501,6 +500,13 @@ Conf::Conf() : Block("")
 		NickAlias *na = NickAlias::Find(o->name);
 		if (!na)
 			continue;
+
+		if (!na->nc || na->nc->o)
+		{
+			// If the account is already an oper it might mean two oper blocks for the same nick, or
+			// something else has configured them as an oper (like a module)
+			continue;
+		}
 
 		na->nc->o = o;
 		Log() << "Tied oper " << na->nc->display << " to type " << o->ot->GetName();

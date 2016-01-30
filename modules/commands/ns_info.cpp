@@ -1,6 +1,6 @@
 /* NickServ core functions
  *
- * (C) 2003-2014 Anope Team
+ * (C) 2003-2016 Anope Team
  * Contact us at team@anope.org
  *
  * Please read COPYING and README for further details.
@@ -40,7 +40,7 @@ class CommandNSInfo : public Command
 			bool nick_online = false, show_hidden = false;
 
 			/* Is the real owner of the nick we're looking up online? -TheShadow */
-			User *u2 = User::Find(na->nick);
+			User *u2 = User::Find(na->nick, true);
 			if (u2 && u2->Account() == na->nc)
 			{
 				nick_online = true;

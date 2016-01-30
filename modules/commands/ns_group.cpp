@@ -1,6 +1,6 @@
 /* NickServ core functions
  *
- * (C) 2003-2014 Anope Team
+ * (C) 2003-2016 Anope Team
  * Contact us at team@anope.org
  *
  * Please read COPYING and README for further details.
@@ -259,7 +259,7 @@ class CommandNSUngroup : public Command
 
 			source.Reply(_("Nick %s has been ungrouped from %s."), na->nick.c_str(), oldcore->display.c_str());
 
-			User *user = User::Find(na->nick);
+			User *user = User::Find(na->nick, true);
 			if (user)
 				/* The user on the nick who was ungrouped may be identified to the old group, set -r */
 				user->RemoveMode(source.service, "REGISTERED");

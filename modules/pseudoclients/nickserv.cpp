@@ -1,6 +1,6 @@
 /* NickServ core functions
  *
- * (C) 2003-2014 Anope Team
+ * (C) 2003-2016 Anope Team
  * Contact us at team@anope.org
  *
  * Please read COPYING and README for further details.
@@ -535,7 +535,7 @@ class NickServCore : public Module, public NickServService
 			NickAlias *na = it->second;
 			++it;
 
-			User *u = User::Find(na->nick);
+			User *u = User::Find(na->nick, true);
 			if (u && (u->IsIdentified(true) || u->IsRecognized()))
 				na->last_seen = Anope::CurTime;
 

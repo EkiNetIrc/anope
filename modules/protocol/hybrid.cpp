@@ -1,13 +1,12 @@
 /* ircd-hybrid-8 protocol module
  *
- * (C) 2003-2014 Anope Team
- * (C) 2012-2015 ircd-hybrid development team
+ * (C) 2003-2016 Anope Team <team@anope.org>
+ * (C) 2012-2016 ircd-hybrid development team
  *
  * Please read COPYING and README for further details.
  *
  * Based on the original code of Epona by Lara.
  * Based on the original code of Services by Andy Church.
- *
  */
 
 #include "module.h"
@@ -19,6 +18,7 @@ class HybridProto : public IRCDProto
 	BotInfo *FindIntroduced()
 	{
 		BotInfo *bi = Config->GetClient("OperServ");
+
 		if (bi && bi->introduced)
 			return bi;
 
@@ -29,10 +29,10 @@ class HybridProto : public IRCDProto
 		return NULL;
 	}
 
-	void SendSVSKillInternal(const MessageSource &source, User *user, const Anope::string &buf) anope_override
+	void SendSVSKillInternal(const MessageSource &source, User *u, const Anope::string &buf) anope_override
 	{
-		IRCDProto::SendSVSKillInternal(source, user, buf);
-		user->KillInternal(source, buf);
+		IRCDProto::SendSVSKillInternal(source, u, buf);
+		u->KillInternal(source, buf);
 	}
 
   public:
@@ -69,7 +69,7 @@ class HybridProto : public IRCDProto
 
 	void SendSQLine(User *, const XLine *x) anope_override
 	{
-		UplinkSocket::Message(FindIntroduced()) << "ENCAP * RESV " << (x->expires ? x->expires - Anope::CurTime : 0) << " " << x->mask << " 0 :" << x->reason;
+		UplinkSocket::Message(FindIntroduced()) << "RESV * " << (x->expires ? x->expires - Anope::CurTime : 0) << " " << x->mask << " :" << x->reason;
 	}
 
 	void SendSGLineDel(const XLine *x) anope_override
@@ -79,7 +79,7 @@ class HybridProto : public IRCDProto
 
 	void SendSGLine(User *, const XLine *x) anope_override
 	{
-		UplinkSocket::Message(Config->GetClient("OperServ")) << "XLINE * " << x->mask << " 0 :" << x->GetReason();
+		UplinkSocket::Message(Config->GetClient("OperServ")) << "XLINE * " << x->mask << " " << (x->expires ? x->expires - Anope::CurTime : 0) << " :" << x->GetReason();
 	}
 
 	void SendSZLineDel(const XLine *x) anope_override
@@ -111,23 +111,21 @@ class HybridProto : public IRCDProto
 		UplinkSocket::Message(Config->GetClient("OperServ")) << "UNRESV * " << x->mask;
 	}
 
-	void SendJoin(User *user, Channel *c, const ChannelStatus *status) anope_override
+	void SendJoin(User *u, Channel *c, const ChannelStatus *status) anope_override
 	{
 		/*
-		 * Note that we must send our modes with the SJOIN and
-		 * can not add them to the mode stacker because ircd-hybrid
-		 * does not allow *any* client to op itself
+		 * Note that we must send our modes with the SJOIN and can not add them to the
+		 * mode stacker because ircd-hybrid does not allow *any* client to op itself
 		 */
-		UplinkSocket::Message() << "SJOIN " << c->creation_time << " " << c->name << " +"
-					<< c->GetModes(true, true) << " :"
-					<< (status != NULL ? status->BuildModePrefixList() : "") << user->GetUID();
+		UplinkSocket::Message() << "SJOIN " << c->creation_time << " " << c->name << " +" << c->GetModes(true, true) << " :"
+					<< (status != NULL ? status->BuildModePrefixList() : "") << u->GetUID();
 
 		/* And update our internal status for this user since this is not going through our mode handling system */
-		if (status != NULL)
+		if (status)
 		{
-			ChanUserContainer *uc = c->FindUser(user);
+			ChanUserContainer *uc = c->FindUser(u);
 
-			if (uc != NULL)
+			if (uc)
 				uc->status = *status;
 		}
 	}
@@ -186,22 +184,20 @@ class HybridProto : public IRCDProto
 		UplinkSocket::Message() << "PASS " << Config->Uplinks[Anope::CurrentUplink].password << " TS 6 :" << Me->GetSID();
 
 		/*
-		 * As of October 13, 2012, ircd-hybrid-8 does support the following capabilities
+		 * As of January 13, 2016, ircd-hybrid-8 does support the following capabilities
 		 * which are required to work with IRC-services:
 		 *
 		 * QS     - Can handle quit storm removal
 		 * EX     - Can do channel +e exemptions
-		 * CHW    - Can do channel wall @#
 		 * IE     - Can do invite exceptions
-		 * KNOCK  - Supports KNOCK
+		 * CHW    - Can do channel wall @#
 		 * TBURST - Supports topic burst
 		 * ENCAP  - Supports ENCAP
 		 * HOPS   - Supports HalfOps
 		 * SVS    - Supports services
 		 * EOB    - Supports End Of Burst message
-		 * TS6    - Capable of TS6 support
 		 */
-		UplinkSocket::Message() << "CAPAB :QS EX CHW IE ENCAP TBURST SVS HOPS EOB TS6";
+		UplinkSocket::Message() << "CAPAB :QS EX CHW IE ENCAP TBURST SVS HOPS EOB";
 
 		SendServer(Me);
 
@@ -330,6 +326,7 @@ struct IRCDMessageBMask : IRCDMessage
 		{
 			spacesepstream bans(params[3]);
 			Anope::string token;
+
 			while (bans.GetToken(token))
 				c->SetModeInternal(source, mode, token);
 		}
@@ -436,9 +433,11 @@ struct IRCDMessageSJoin : IRCDMessage
 	void Run(MessageSource &source, const std::vector<Anope::string> &params) anope_override
 	{
 		Anope::string modes;
+
 		if (params.size() >= 3)
 			for (unsigned i = 2; i < params.size() - 1; ++i)
 				modes += " " + params[i];
+
 		if (!modes.empty())
 			modes.erase(modes.begin());
 
@@ -486,6 +485,7 @@ struct IRCDMessageSVSMode : IRCDMessage
 	void Run(MessageSource &source, const std::vector<Anope::string> &params) anope_override
 	{
 		User *u = User::Find(params[0]);
+
 		if (!u)
 			return;
 

@@ -1,6 +1,6 @@
 /*
  *
- * (C) 2014 Anope Team
+ * (C) 2014-2016 Anope Team
  * Contact us at team@anope.org
  *
  * Please read COPYING and README for further details.
@@ -87,6 +87,10 @@ namespace SASL
 
 			NickAlias *na = NickAlias::Find(GetAccount());
 			if (!na || na->nc->HasExt("NS_SUSPENDED"))
+				return OnFail();
+
+			unsigned int maxlogins = Config->GetModule("ns_identify")->Get<unsigned int>("maxlogins");
+			if (maxlogins && na->nc->users.size() >= maxlogins)
 				return OnFail();
 
 			Session *s = sasl->GetSession(uid);

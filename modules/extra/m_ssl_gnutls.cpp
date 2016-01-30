@@ -1,13 +1,14 @@
 /*
+ *
  * (C) 2014 Attila Molnar <attilamolnar@hush.com>
- * (C) 2014 Anope Team
+ * (C) 2014-2016 Anope Team
  * Contact us at team@anope.org
  *
  * Please read COPYING and README for further details.
  */
 
 /* RequiredLibraries: gnutls */
-/* RequiredWindowsLibraries: libgnutls-28 */
+/* RequiredWindowsLibraries: libgnutls-30 */
 
 #include "module.h"
 #include "modules/ssl.h"

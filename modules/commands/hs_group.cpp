@@ -1,6 +1,6 @@
 /* HostServ core functions
  *
- * (C) 2003-2014 Anope Team
+ * (C) 2003-2016 Anope Team
  * Contact us at team@anope.org
  *
  * Please read COPYING and README for further details.
@@ -55,9 +55,9 @@ class CommandHSGroup : public Command
 		{
 			this->Sync(na);
 			if (!na->GetVhostIdent().empty())
-				source.Reply(_("All vhost's in the group \002%s\002 have been set to \002%s\002@\002%s\002."), source.nc->display.c_str(), na->GetVhostIdent().c_str(), na->GetVhostHost().c_str());
+				source.Reply(_("All vhosts in the group \002%s\002 have been set to \002%s\002@\002%s\002."), source.nc->display.c_str(), na->GetVhostIdent().c_str(), na->GetVhostHost().c_str());
 			else
-				source.Reply(_("All vhost's in the group \002%s\002 have been set to \002%s\002."), source.nc->display.c_str(), na->GetVhostHost().c_str());
+				source.Reply(_("All vhosts in the group \002%s\002 have been set to \002%s\002."), source.nc->display.c_str(), na->GetVhostHost().c_str());
 		}
 		else
 			source.Reply(HOST_NOT_ASSIGNED);

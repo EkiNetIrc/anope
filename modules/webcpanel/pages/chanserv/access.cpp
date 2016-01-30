@@ -1,5 +1,5 @@
 /*
- * (C) 2003-2014 Anope Team
+ * (C) 2003-2016 Anope Team
  * Contact us at team@anope.org
  *
  * Please read COPYING and README for further details.
@@ -92,6 +92,9 @@ bool WebCPanel::ChanServ::Access::OnRequest(HTTPProvider *server, const Anope::s
 			}
 		}
 	}
+
+	/* command might have invalidated u_access */
+	u_access = ci->AccessFor(na->nc);
 
 	replacements["ESCAPED_CHANNEL"] = HTTPUtils::URLEncode(chname);
 	replacements["ACCESS_CHANGE"] = u_access.HasPriv("ACCESS_CHANGE") ? "YES" : "NO";
