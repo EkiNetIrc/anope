@@ -38,6 +38,7 @@ class ModuleWebCPanel : public Module
 	WebCPanel::MemoServ::Memos memoserv_memos;
 
 	WebCPanel::HostServ::Request hostserv_request;
+	WebCPanel::HostServ::Set hostserv_set;
 
 	WebCPanel::OperServ::Akill operserv_akill;
 
@@ -50,7 +51,7 @@ class ModuleWebCPanel : public Module
 		nickserv_info("NickServ", "/nickserv/info"), nickserv_cert("NickServ", "/nickserv/cert"), nickserv_access("NickServ", "/nickserv/access"), nickserv_alist("NickServ", "/nickserv/alist"),
 		chanserv_info("ChanServ", "/chanserv/info"), chanserv_set("ChanServ", "/chanserv/set"), chanserv_access("ChanServ", "/chanserv/access"), chanserv_akick("ChanServ", "/chanserv/akick"),
 		chanserv_modes("ChanServ", "/chanserv/modes"), chanserv_drop("ChanServ", "/chanserv/drop"), memoserv_memos("MemoServ", "/memoserv/memos"), hostserv_request("HostServ", "/hostserv/request"),
-		operserv_akill("OperServ", "/operserv/akill")
+		hostserv_set("HostServ", "/hostserv/set"), operserv_akill("OperServ", "/operserv/akill")
 	{
 
 		me = this;
@@ -84,6 +85,7 @@ class ModuleWebCPanel : public Module
 			SubSection ss;
 			ss.name = "Information";
 			ss.url = "/nickserv/info";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->nickserv_info);
 
@@ -91,17 +93,20 @@ class ModuleWebCPanel : public Module
 			{
 				ss.name = "SSL Certificates";
 				ss.url = "/nickserv/cert";
+				ss.oper = false;
 				s.subsections.push_back(ss);
 				provider->RegisterPage(&this->nickserv_cert);
 			}
 
 			ss.name = "Access";
 			ss.url = "/nickserv/access";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->nickserv_access);
 
 			ss.name = "AList";
 			ss.url = "/nickserv/alist";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->nickserv_alist);
 
@@ -117,31 +122,37 @@ class ModuleWebCPanel : public Module
 			SubSection ss;
 			ss.name = "Channels";
 			ss.url = "/chanserv/info";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->chanserv_info);
 
 			ss.name = "Settings";
 			ss.url = "/chanserv/set";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->chanserv_set);
 
 			ss.name = "Access";
 			ss.url = "/chanserv/access";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->chanserv_access);
 
 			ss.name = "Akick";
 			ss.url = "/chanserv/akick";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->chanserv_akick);
 
 			ss.name = "Modes";
 			ss.url = "/chanserv/modes";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->chanserv_modes);
 
 			ss.name = "Drop";
 			ss.url = "/chanserv/drop";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->chanserv_drop);
 
@@ -157,6 +168,7 @@ class ModuleWebCPanel : public Module
 			SubSection ss;
 			ss.name = "Memos";
 			ss.url = "/memoserv/memos";
+			ss.oper = false;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->memoserv_memos);
 
@@ -175,6 +187,12 @@ class ModuleWebCPanel : public Module
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->hostserv_request);
 
+			ss.name = "Set a vHost";
+			ss.url = "/hostserv/set";
+			ss.oper = true;
+			s.subsections.push_back(ss);
+			provider->RegisterPage(&this->hostserv_set);
+
 			panel.sections.push_back(s);
 		}
 
@@ -187,6 +205,7 @@ class ModuleWebCPanel : public Module
 			SubSection ss;
 			ss.name = "Akill";
 			ss.url = "/operserv/akill";
+			ss.oper = true;
 			s.subsections.push_back(ss);
 			provider->RegisterPage(&this->operserv_akill);
 
@@ -221,8 +240,9 @@ class ModuleWebCPanel : public Module
 			provider->UnregisterPage(&this->chanserv_drop);
 
 			provider->UnregisterPage(&this->memoserv_memos);
-			
+
 			provider->UnregisterPage(&this->hostserv_request);
+			provider->UnregisterPage(&this->hostserv_set);
 
 			provider->UnregisterPage(&this->operserv_akill);
 		}

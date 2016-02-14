@@ -1,0 +1,36 @@
+{INCLUDE header.html}
+		<div class="panel-heading">Set a vHost</div>
+		<div class="panel-body">
+			{IF EXISTS NOACCESS}
+			<h2>Access denied.</h2>
+			{ELSE}
+
+			{FOR M IN MESSAGES}
+			<div class="alert alert-info">
+				{M}<br>
+			</div>
+			{END FOR}
+
+			<h4>Set a vHost</h4>
+			<form class="form-horizontal" method="post" action="/hostserv/set">
+				<div class="form-group">
+					<label class="control-label col-lg-2" for="nickname">Nickname:</label>
+					<div class="col-lg-6">
+						<input class="form-control" type="text" name="nickname" id="nickname" placeholder="Nickname">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-lg-2" for="vhost">vHost:</label>
+					<div class="col-lg-6">
+						<input class="form-control" type="text" name="vhost" id="vhost" placeholder="The new vHost here (if empty, existing vhost will be removed)">
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-lg-offset-2 col-lg-6">
+						<button type="submit" class="btn btn-primary">Send</button>
+					</div>
+				</div>
+			</form>
+			{END IF}
+		</div>
+{INCLUDE footer.html}

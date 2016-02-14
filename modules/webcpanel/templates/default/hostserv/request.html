@@ -34,11 +34,11 @@
 						<td><button type="submit" class="btn btn-primary">Request</button></td>
 						</form>
 					</tr>
-					{ELSE}
+					{ELSE}{IF EXISTS VHOST}{ELSE}
 					<tr>
-						<td colspan="2" class="text-center"><strong>vHost requests are disabled on this network.</strong></td>
+						<td colspan="2" class="text-center"><strong>Please ask network staff to get a vHost (cloak)</strong></td>
 					</tr>
-					{END IF}
+					{END IF}{END IF}
 				</tbody>
 			</table>
 		</div>

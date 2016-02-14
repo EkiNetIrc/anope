@@ -19,6 +19,7 @@ struct SubSection
 {
 	Anope::string name;
 	Anope::string url;
+	bool oper;
 };
 
 struct Section
@@ -125,9 +126,12 @@ class WebPanelProtectedPage : public WebPanelPage
 			for (unsigned i = 0; i < ns->subsections.size(); ++i)
 			{
 				SubSection& ss = ns->subsections[i];
-				replacements["SUBCATEGORY_URLS"] = ss.url;
-				replacements["SUBCATEGORY_GETS"] = get;
-				replacements["SUBCATEGORY_NAMES"] = ss.name;
+				if (!ss.oper || na->nc->IsServicesOper())
+				{
+					replacements["SUBCATEGORY_URLS"] = ss.url;
+					replacements["SUBCATEGORY_GETS"] = get;
+					replacements["SUBCATEGORY_NAMES"] = ss.name;
+				}
 			}
 		}
 
@@ -176,5 +180,6 @@ namespace WebPanel
 #include "pages/memoserv/memos.h"
 
 #include "pages/hostserv/request.h"
+#include "pages/hostserv/set.h"
 
 #include "pages/operserv/akill.h"
