@@ -12,5 +12,4 @@ script:
   - make
 
 notifications:
-  irc:
-    - "irc.ekinetirc.fr.nf#EkiNetIrc"
+  webhooks: http://n.tkte.ch/h/4709/ij_epBokkneRq6moA-8hzsXx
