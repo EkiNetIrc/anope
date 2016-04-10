@@ -50,11 +50,6 @@ class BotServCore : public Module
 
 	void OnJoinChannel(User *user, Channel *c) anope_override
 	{
-		if (c->ci && c->creation_time > c->ci->time_registered)
-		{
-			return;
-		}
-
 		if (!Config || !IRCD)
 			return;
 
