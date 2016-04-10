@@ -164,6 +164,12 @@ class CharybdisProto : public IRCDProto
 		Server *s = Server::Find(uid.substr(0, 3));
 		UplinkSocket::Message(Me) << "ENCAP " << (s ? s->GetName() : uid.substr(0, 3)) << " SVSLOGIN " << uid << " * * * " << acc;
 	}
+	
+	bool IsExtbanValid(const Anope::string &mask) anope_override
+	{
+		// Match extban & forward-bans
+		return (mask.length() >= 2 && mask[0] == '$') || mask.find("$#") != Anope::string::npos;
+	}
 };
 
 
