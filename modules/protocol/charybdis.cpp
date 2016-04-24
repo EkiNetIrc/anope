@@ -159,10 +159,10 @@ class CharybdisProto : public IRCDProto
 		UplinkSocket::Message(Me) << "ENCAP " << (s ? s->GetName() : message.target.substr(0, 3)) << " SASL " << message.source << " " << message.target << " " << message.type << " " << message.data << (message.ext.empty() ? "" : (" " + message.ext));
 	}
 
-	void SendSVSLogin(const Anope::string &uid, const Anope::string &acc) anope_override
+	void SendSVSLogin(const Anope::string &uid, const Anope::string &acc, const Anope::string &vident, const Anope::string &vhost) anope_override
 	{
 		Server *s = Server::Find(uid.substr(0, 3));
-		UplinkSocket::Message(Me) << "ENCAP " << (s ? s->GetName() : uid.substr(0, 3)) << " SVSLOGIN " << uid << " * * * " << acc;
+		UplinkSocket::Message(Me) << "ENCAP " << (s ? s->GetName() : uid.substr(0, 3)) << " SVSLOGIN " << uid << " * " << (!vident.empty() ? vident : '*') << " " << (!vhost.empty() ? vhost : '*') << " " << acc;
 	}
 	
 	bool IsExtbanValid(const Anope::string &mask) anope_override
@@ -243,7 +243,7 @@ struct IRCDMessageEUID : IRCDMessage
 		if (params[9] != "*")
 			na = NickAlias::Find(params[9]);
 
-		User::OnIntroduce(params[0], params[4], params[8], params[5], params[6], source.GetServer(), params[10], params[2].is_pos_number_only() ? convertTo<time_t>(params[2]) : Anope::CurTime, params[3], params[7], na ? *na->nc : NULL);
+		User::OnIntroduce(params[0], params[4], (params[8] != "*" ? params[8] : params[5]), params[5], params[6], source.GetServer(), params[10], params[2].is_pos_number_only() ? convertTo<time_t>(params[2]) : Anope::CurTime, params[3], params[7], na ? *na->nc : NULL);
 	}
 };
 
