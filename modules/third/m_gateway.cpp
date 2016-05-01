@@ -115,13 +115,6 @@ class ModuleMGateway : public Module
 		if (!this->check_on_netburst && !u->server->IsSynced())
 			return;
 
-		const NickAlias *na = NickAlias::Find(u->nick);
-		if (na && u->Account() == na->nc && na->HasVhost())
-		{
-			// If the user has a vhost, we do nothing (otherwise, we may overwrite the vhost)
-			return;
-		}
-
 		Anope::string addr = u->ip.addr();
 		Anope::string host = u->host;
 
@@ -175,9 +168,15 @@ class ModuleMGateway : public Module
 						}
 					}
 
-					BotInfo *HostServ = Config->GetClient("HostServ");
-					u->SetMode(HostServ, "CLOAK");
-					IRCD->SendVhost(u, "", vhost);
+					// Only send the vhost if the user don't have an HostServ vhost
+					const NickAlias *na = NickAlias::Find(u->nick);
+					if (!na || u->Account() != na->nc || !na->HasVhost())
+					{
+						BotInfo *HostServ = Config->GetClient("HostServ");
+						u->SetMode(HostServ, "CLOAK");
+						IRCD->SendVhost(u, "", vhost);
+					}
+					// But fake the host/cloaked host in case of the HostServ vhost is disabled/removed...
 					u->host = vhost;
 					u->SetCloakedHost(vhost);
 
