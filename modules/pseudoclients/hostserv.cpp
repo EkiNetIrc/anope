@@ -55,14 +55,6 @@ class HostServCore : public Module
 
 			if (IRCD->CanSetVIdent && !na->GetVhostIdent().empty())
 				u->SetVIdent(na->GetVhostIdent());
-
-			if (HostServ)
-			{
-				if (!na->GetVhostIdent().empty())
-					u->SendMessage(HostServ, _("Your vhost of \002%s\002@\002%s\002 is now activated."), na->GetVhostIdent().c_str(), na->GetVhostHost().c_str());
-				else
-					u->SendMessage(HostServ, _("Your vhost of \002%s\002 is now activated."), na->GetVhostHost().c_str());
-			}
 		}
 	}
 
@@ -94,14 +86,6 @@ class HostServCore : public Module
 
 				if (IRCD->CanSetVIdent && !na->GetVhostIdent().empty())
 					u->SetVIdent(na->GetVhostIdent());
-
-				if (HostServ)
-				{
-					if (!na->GetVhostIdent().empty())
-						u->SendMessage(HostServ, _("Your vhost of \002%s\002@\002%s\002 is now activated."), na->GetVhostIdent().c_str(), na->GetVhostHost().c_str());
-					else
-						u->SendMessage(HostServ, _("Your vhost of \002%s\002 is now activated."), na->GetVhostHost().c_str());
-				}
 			}
 		}
 	}
