@@ -123,6 +123,7 @@ class ModuleMGateway : public Module
 		}
 
 		Anope::string addr = u->ip.addr();
+		Anope::string host = u->host;
 
 		for (unsigned i = 0; i < this->gateways.size(); ++i)
 		{
@@ -130,7 +131,7 @@ class ModuleMGateway : public Module
 
 			for (unsigned j = 0; j < gw.ips.size(); ++j)
 			{
-				if (Anope::Match(addr, gw.ips[j]))
+				if (Anope::Match(addr, gw.ips[j]) || Anope::Match(host, gw.ips[j]))
 				{
 					if (gw.need_account && !u->Account())
 					{
