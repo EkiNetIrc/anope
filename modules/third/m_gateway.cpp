@@ -134,9 +134,9 @@ class ModuleMGateway : public Module
 					}
 
 					Anope::string vhost = gw.vhost;
-					vhost = vhost.replace_all_cs("%a", u->Account() ? u->Account()->display : "");
+					vhost = vhost.replace_all_cs("%a", u->Account() ? u->Account()->display.lower() : "");
 					vhost = vhost.replace_all_cs("%n", u->nick.lower());
-					vhost = vhost.replace_all_cs("%u", u->GetIdent());
+					vhost = vhost.replace_all_cs("%u", u->GetIdent().lower());
 					vhost = vhost.replace_all_cs("%i", addr);
 
 					if (vhost.length() > Config->GetBlock("networkinfo")->Get<unsigned>("hostlen"))
