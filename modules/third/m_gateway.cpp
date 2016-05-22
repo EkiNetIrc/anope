@@ -175,10 +175,11 @@ class ModuleMGateway : public Module
 						BotInfo *HostServ = Config->GetClient("HostServ");
 						u->SetMode(HostServ, "CLOAK");
 						IRCD->SendVhost(u, "", vhost);
+						u->SetDisplayedHost(vhost);
 					}
 					// But fake the host/cloaked host in case of the HostServ vhost is disabled/removed...
 					u->host = vhost;
-					u->SetCloakedHost(vhost);
+					u->chost = vhost;
 
 					return;
 				}
