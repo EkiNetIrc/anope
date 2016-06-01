@@ -154,7 +154,13 @@ class ModuleMGateway : public Module
 						{
 							if (vhostchars.find_first_of(vhost[k]) == Anope::string::npos)
 							{
-								vhost.erase(k);
+								if (vhost[k] == '_' && vhostchars.find_first_of('-') != Anope::string::npos)
+								{
+									vhost[k] = '-';
+									continue;
+								}
+
+								vhost.erase(k, 1);
 								--k;
 							}
 						}
